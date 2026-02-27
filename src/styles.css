@@ -1,0 +1,103 @@
+:root {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #1b1f23;
+  background: #f7f8fa;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.app-shell {
+  margin: 0 auto;
+  max-width: 980px;
+  padding: 1rem;
+}
+
+header {
+  border-bottom: 1px solid #d1d5db;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+}
+
+nav {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+button {
+  background: #ffffff;
+  border: 1px solid #c6cbd1;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 0.4rem 0.7rem;
+}
+
+button.active {
+  background: #dff0ff;
+  border-color: #86b9e6;
+}
+
+main section {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.state-message {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  margin: 1rem 0;
+  padding: 0.75rem;
+}
+
+.state-message.error {
+  border-color: #e8b4b4;
+  color: #7f1d1d;
+}
+
+.json-panel {
+  border-top: 1px solid #e5e7eb;
+  margin-top: 1rem;
+  padding-top: 1rem;
+}
+
+.json-panel-header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+pre {
+  background: #f2f4f8;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  overflow: auto;
+  padding: 0.75rem;
+}
+
+input {
+  border: 1px solid #c6cbd1;
+  border-radius: 6px;
+  margin: 0.35rem 0 0.75rem;
+  padding: 0.45rem;
+  width: min(420px, 100%);
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th,
+td {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0.5rem;
+  text-align: left;
+}
