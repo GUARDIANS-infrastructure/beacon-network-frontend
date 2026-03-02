@@ -30,8 +30,9 @@ pnpm build
 4. [Testing](docs/testing.md)
 5. [CI](docs/ci.md)
 6. [Deployment](docs/deployment.md)
-7. [Architecture](docs/architecture.md)
-8. [Twelve-factor Alignment](docs/twelve-factor.md)
+7. (Optional, AWS ops) [AWS Infrastructure Runbook](docs/aws-infrastructure-runbook.md)
+8. [Architecture](docs/architecture.md)
+9. [Twelve-factor Alignment](docs/twelve-factor.md)
 
 ## Notes
 

@@ -8,7 +8,7 @@ describe("parseAppConfig", () => {
     expect(cfg.apiBaseUrl).toContain("beacon-network/v2.0.0");
     expect(cfg.requestTimeoutMs).toBe(10000);
     expect(cfg.retryCount).toBe(1);
-    expect(cfg.appTitle).toBe("Beacon Network");
+    expect(cfg.appTitle).toBe("GUARDIANS Beacon Network");
     expect(cfg.enableDebugLogs).toBe(false);
   });
 

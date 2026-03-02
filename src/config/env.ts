@@ -1,9 +1,9 @@
 const defaultConfig = {
   apiBaseUrl:
-    "http://ec2-15-135-165-56.ap-southeast-2.compute.amazonaws.com:8080/beacon-network/v2.0.0",
+    "https://api.bn.test.biocommons.org.au/beacon-network/v2.0.0",
   requestTimeoutMs: 10000,
   retryCount: 1,
-  appTitle: "Beacon Network",
+  appTitle: "GUARDIANS Beacon Network",
   enableDebugLogs: false
 } as const;
 

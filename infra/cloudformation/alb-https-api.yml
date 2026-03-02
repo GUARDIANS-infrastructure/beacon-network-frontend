@@ -1,0 +1,157 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Minimal HTTPS ALB in front of HTTP EC2 backend for Beacon Network API.
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC containing the ALB and backend EC2 instance.
+  PublicSubnet1Id:
+    Type: AWS::EC2::Subnet::Id
+    Description: Public subnet for ALB (AZ 1).
+  PublicSubnet2Id:
+    Type: AWS::EC2::Subnet::Id
+    Description: Public subnet for ALB (AZ 2).
+  BackendInstanceId:
+    Type: AWS::EC2::Instance::Id
+    Description: Existing EC2 instance running WildFly HTTP on port 8080.
+  BackendPort:
+    Type: Number
+    Default: 8080
+    Description: Backend HTTP port on EC2 instance.
+  CertificateArn:
+    Type: String
+    Description: ACM certificate ARN in the same region as the ALB.
+  ApiDomainName:
+    Type: String
+    Default: ''
+    Description: Optional Route53 record name (for example api.example.org).
+  HostedZoneId:
+    Type: String
+    Default: ''
+    Description: Optional Route53 hosted zone ID for ApiDomainName.
+  HealthCheckPath:
+    Type: String
+    Default: /beacon-network/v2.0.0/info
+    Description: Health check path served by backend.
+  AllowedHttpsCidr:
+    Type: String
+    Default: 0.0.0.0/0
+    Description: CIDR allowed to reach ALB on HTTPS.
+  BackendSecurityGroupId:
+    Type: String
+    Default: ''
+    Description: Optional backend EC2 security group ID to allow backend port from ALB SG.
+
+Conditions:
+  CreateApiRecord: !And
+    - !Not [!Equals [!Ref ApiDomainName, '']]
+    - !Not [!Equals [!Ref HostedZoneId, '']]
+  RestrictBackendSg: !Not [!Equals [!Ref BackendSecurityGroupId, '']]
+
+Resources:
+  AlbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow public HTTPS traffic to API ALB.
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: !Ref AllowedHttpsCidr
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+
+  ApiAlb:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: beacon-network-api-alb
+      Scheme: internet-facing
+      Type: application
+      IpAddressType: ipv4
+      SecurityGroups:
+        - !Ref AlbSecurityGroup
+      Subnets:
+        - !Ref PublicSubnet1Id
+        - !Ref PublicSubnet2Id
+
+  ApiTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: beacon-network-api-tg
+      VpcId: !Ref VpcId
+      TargetType: instance
+      Protocol: HTTP
+      Port: !Ref BackendPort
+      HealthCheckEnabled: true
+      HealthCheckProtocol: HTTP
+      HealthCheckPath: !Ref HealthCheckPath
+      HealthCheckPort: traffic-port
+      Matcher:
+        HttpCode: 200-399
+      Targets:
+        - Id: !Ref BackendInstanceId
+          Port: !Ref BackendPort
+
+  HttpRedirectListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ApiAlb
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - Type: redirect
+          RedirectConfig:
+            Protocol: HTTPS
+            Port: '443'
+            StatusCode: HTTP_301
+
+  HttpsListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ApiAlb
+      Port: 443
+      Protocol: HTTPS
+      Certificates:
+        - CertificateArn: !Ref CertificateArn
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref ApiTargetGroup
+
+  ApiDnsRecord:
+    Type: AWS::Route53::RecordSet
+    Condition: CreateApiRecord
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref ApiDomainName
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt ApiAlb.DNSName
+        HostedZoneId: !GetAtt ApiAlb.CanonicalHostedZoneID
+
+  AllowAlbToBackendIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Condition: RestrictBackendSg
+    Properties:
+      GroupId: !Ref BackendSecurityGroupId
+      IpProtocol: tcp
+      FromPort: !Ref BackendPort
+      ToPort: !Ref BackendPort
+      SourceSecurityGroupId: !Ref AlbSecurityGroup
+      Description: Allow API ALB to reach backend HTTP port.
+
+Outputs:
+  AlbDnsName:
+    Description: DNS name of the API ALB.
+    Value: !GetAtt ApiAlb.DNSName
+  HttpsBaseUrl:
+    Description: API HTTPS base URL using ALB DNS.
+    Value: !Sub "https://${ApiAlb.DNSName}/beacon-network/v2.0.0"
+  ApiCustomDomainUrl:
+    Condition: CreateApiRecord
+    Description: API HTTPS base URL using custom domain.
+    Value: !Sub "https://${ApiDomainName}/beacon-network/v2.0.0"
+  AlbSecurityGroupId:
+    Description: Security group attached to ALB.
+    Value: !Ref AlbSecurityGroup
