@@ -45,6 +45,57 @@ const isValidUrl = (value: string): boolean => {
   }
 };
 
+const asNonEmptyString = (
+  value: unknown,
+  validator?: (candidate: string) => boolean
+): string | undefined => {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+  if (trimmed === "") {
+    return undefined;
+  }
+
+  if (validator && !validator(trimmed)) {
+    return undefined;
+  }
+
+  return trimmed;
+};
+
+const parseRuntimeConfig = (payload: unknown): Partial<AppConfig> => {
+  if (typeof payload !== "object" || payload === null) {
+    return {};
+  }
+
+  const record = payload as Record<string, unknown>;
+  const apiBaseUrl = asNonEmptyString(record.apiBaseUrl, isValidUrl);
+  const appTitle = asNonEmptyString(record.appTitle);
+
+  return {
+    apiBaseUrl,
+    requestTimeoutMs:
+      typeof record.requestTimeoutMs === "number" &&
+      Number.isFinite(record.requestTimeoutMs) &&
+      record.requestTimeoutMs >= 0
+        ? record.requestTimeoutMs
+        : undefined,
+    retryCount:
+      typeof record.retryCount === "number" &&
+      Number.isFinite(record.retryCount) &&
+      record.retryCount >= 0
+        ? record.retryCount
+        : undefined,
+    appTitle,
+    enableDebugLogs:
+      typeof record.enableDebugLogs === "boolean"
+        ? record.enableDebugLogs
+        : undefined
+  };
+};
+
 export const parseAppConfig = (env: EnvLike): AppConfig => {
   const apiBaseUrl =
     env.VITE_API_BASE_URL?.trim() || env.VITE_API_URL?.trim() || defaultConfig.apiBaseUrl;
@@ -64,4 +115,26 @@ export const parseAppConfig = (env: EnvLike): AppConfig => {
   };
 };
 
-export const appConfig: AppConfig = parseAppConfig(import.meta.env);
+export let appConfig: AppConfig = parseAppConfig(import.meta.env);
+
+export const loadRuntimeConfig = async (): Promise<void> => {
+  try {
+    const response = await fetch("/config.json", {
+      headers: {
+        Accept: "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      return;
+    }
+
+    const overrides = parseRuntimeConfig(await response.json());
+    appConfig = {
+      ...appConfig,
+      ...overrides
+    };
+  } catch {
+    // Ignore runtime config failures to keep the app usable with env defaults.
+  }
+};

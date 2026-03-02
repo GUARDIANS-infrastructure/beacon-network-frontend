@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { parseAppConfig } from "./env";
+import { describe, expect, it, vi } from "vitest";
+import { loadRuntimeConfig, parseAppConfig } from "./env";
 
 describe("parseAppConfig", () => {
   it("uses defaults when env vars are missing", () => {
@@ -26,5 +26,16 @@ describe("parseAppConfig", () => {
     expect(cfg.retryCount).toBe(2);
     expect(cfg.appTitle).toBe("Local Beacon");
     expect(cfg.enableDebugLogs).toBe(true);
+  });
+});
+
+describe("loadRuntimeConfig", () => {
+  it("does not throw when runtime config is unavailable", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(loadRuntimeConfig()).resolves.toBeUndefined();
+
+    vi.unstubAllGlobals();
   });
 });

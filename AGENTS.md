@@ -18,6 +18,19 @@ This repo is a lightweight front-end for a GA4GH Beacon Network aggregator (Elix
 - Researchers and data stewards browsing public cohort/dataset summaries.
 - Operators validating network health and configuration at a glance.
 
+## Design principles
+- Follow the Twelve-factor App factors so to create an app that:
+  - Uses declarative formats for setup automation, to minimize time and cost
+    for new developers joining the project;
+  - Has a clean contract with the underlying operating system, offering maximum
+    portability between execution environments;
+  - Is suitable for deployment on modern cloud platforms, obviating the need
+    for servers and systems administration;
+  - Minimizes divergence between development and production, enabling continuous
+    deployment for maximum agility;
+  - And can scale up without significant changes to tooling, architecture, or
+    development practices.
+
 ## Environment & tooling assumptions
 - Node.js LTS.
 - Package manager: pick one (prefer `pnpm`, otherwise `npm`). Keep commands consistent in docs and scripts.
