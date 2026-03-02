@@ -6,28 +6,28 @@ import { OverviewPage } from "./pages/OverviewPage";
 
 type PageKey = "overview" | "configuration" | "cohorts";
 
-const pageLabels: Record<PageKey, string> = {
-  overview: "Overview",
-  configuration: "Configuration",
-  cohorts: "Cohorts"
-};
+const pageNavItems: Array<{ key: PageKey; label: string }> = [
+  { key: "cohorts", label: "Cohorts" },
+  { key: "overview", label: "Overview" },
+  { key: "configuration", label: "Configuration" }
+];
 
 export default function App(): ReactElement {
-  const [page, setPage] = useState<PageKey>("overview");
+  const [page, setPage] = useState<PageKey>("cohorts");
 
   return (
     <div className="app-shell">
       <header>
         <h1>{appConfig.appTitle}</h1>
-        <p>Beacon Network metadata viewer</p>
+        <p>Beacon Network UI</p>
       </header>
 
       <nav>
-        {Object.entries(pageLabels).map(([key, label]) => (
+        {pageNavItems.map(({ key, label }) => (
           <button
             key={key}
             className={key === page ? "active" : ""}
-            onClick={() => setPage(key as PageKey)}
+            onClick={() => setPage(key)}
             type="button"
           >
             {label}

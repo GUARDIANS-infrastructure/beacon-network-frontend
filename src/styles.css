@@ -101,3 +101,41 @@ td {
   padding: 0.5rem;
   text-align: left;
 }
+
+.status-badge {
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 0.2rem 0.55rem;
+  text-transform: uppercase;
+}
+
+.status-badge.ok {
+  background: #e7f8ef;
+  color: #10653b;
+}
+
+.status-badge.error {
+  background: #fdecec;
+  color: #9a1f1f;
+}
+
+.cohort-search label {
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.link-button {
+  background: transparent;
+  border: 0;
+  color: #0b5cab;
+  padding: 0;
+  text-align: left;
+  text-decoration: underline;
+}
+
+.link-button:hover {
+  color: #083f73;
+}
