@@ -10,7 +10,7 @@ Deploy as static assets (no server runtime required), for example:
 - nginx
 - equivalent static hosting
 
-## Release shape
+## Release steps
 
 - Build with `pnpm build`
 - Serve `dist/`
@@ -48,10 +48,6 @@ It deploys on GitHub Release `published` and expects these GitHub Actions settin
 
 - `AWS_ROLE_TO_ASSUME`
   - IAM role ARN used by GitHub OIDC (`aws-actions/configure-aws-credentials`).
-- `APP_PARTNERS_JSON` (optional)
-  - JSON written to `dist/partners.json` during deployment when provided.
-  - Must be valid JSON.
-  - If omitted, no workflow override is applied and repo/default `partners.json` behavior remains.
 
 Build-time note:
 
