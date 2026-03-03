@@ -10,6 +10,7 @@
 
 body {
   margin: 0;
+  background: #f7f8fa;
 }
 
 .app-shell {
@@ -189,6 +190,7 @@ td {
   padding: 1rem;
   border-radius: 12px;
   background: #ffffff;
+  border: 1px solid #e5e7eb;
 }
 
 /* Equal-ish visual impact */
