@@ -5,6 +5,6 @@ import App from "./App";
 describe("App", () => {
   it("renders app title", () => {
     const html = renderToString(<App />);
-    expect(html).toContain("Beacon Network");
+    expect(html).toContain("<h1>GUARDIANS Beacon Network</h1>");
   });
 });

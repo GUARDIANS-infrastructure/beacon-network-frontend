@@ -3,6 +3,7 @@ import { appConfig } from "./config/env";
 import { ConfigurationPage } from "./pages/ConfigurationPage";
 import { CohortsPage } from "./pages/CohortsPage";
 import { OverviewPage } from "./pages/OverviewPage";
+import { PartnerLogoWall } from "./components/PartnerLogoWall"; // ✅ add
 
 type PageKey = "overview" | "configuration" | "cohorts";
 
@@ -40,6 +41,10 @@ export default function App(): ReactElement {
         {page === "configuration" && <ConfigurationPage />}
         {page === "cohorts" && <CohortsPage />}
       </main>
+
+      <footer>
+        <PartnerLogoWall />
+      </footer>
     </div>
   );
 }

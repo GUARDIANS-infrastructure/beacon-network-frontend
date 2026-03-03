@@ -18,6 +18,13 @@ body {
   padding: 1rem;
 }
 
+.app-shell footer {
+  margin-top: 6rem;
+  padding: 2rem 0 1.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  background: #f3f5f9;
+}
+
 header {
   border-bottom: 1px solid #d1d5db;
   margin-bottom: 1rem;
@@ -138,4 +145,67 @@ td {
 
 .link-button:hover {
   color: #083f73;
+}
+
+/* -------------------------------------------------------------------------
+   Partner logo wall
+   - No list bullets
+   - Roughly equal visual impact (consistent logo height + max width cap)
+   - Wrapped horizontal row that adapts to screen width
+   ------------------------------------------------------------------------- */
+
+.logoWall {
+  padding: 0.5rem 0 0;
+}
+
+.logoWallTitle {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  line-height: 1.2;
+}
+
+/* Wrapped horizontal row */
+.logoGrid {
+  list-style: none !important;
+  margin: 0;
+  padding: 0;
+
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+
+  align-items: center;
+  justify-content: center; /* change to flex-start for left-aligned */
+}
+
+/* Defensive: ensure no bullets even if a global rule targets li */
+.logoTile {
+  list-style: none !important;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 1rem;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.03);
+}
+
+/* Equal-ish visual impact */
+.logoTile img {
+  display: block;
+
+  height: 64px;
+  width: auto;
+  max-width: 180px;
+
+  object-fit: contain;
+  object-position: center;
+}
+
+@media (min-width: 768px) {
+  .logoTile img {
+    height: 72px;
+    max-width: 220px;
+  }
 }
