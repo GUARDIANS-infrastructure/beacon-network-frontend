@@ -32,13 +32,13 @@ This runbook covers:
 Quick backend check on instance:
 
 ```bash
-curl -i http://localhost:8080/beacon-network/v2.0.0/info
+curl -i https://localhost/beacon-network/v2.0.0/info
 ```
 
 ## 2. ALB + ACM cert + Route53
 
 1. Request ACM cert in same region as EC2/ALB (for example `ap-southeast-2`):
-   - domain example: `api.bn.test.biocommons.org.au`
+   - domain example: `api.example.org`
    - complete DNS validation until status is `Issued`
 2. Create internet-facing ALB in same VPC as EC2:
    - enable at least two AZs/subnets
@@ -52,11 +52,11 @@ curl -i http://localhost:8080/beacon-network/v2.0.0/info
    - `HTTPS :443` -> forward to target group
    - `HTTP :80` -> redirect to `HTTPS :443` (or omit 80 listener)
 6. Create Route53 record:
-   - `api.bn.test.biocommons.org.au` -> Alias to ALB DNS
+   - `api.example.org` -> Alias to ALB DNS
 7. Validate:
 
 ```bash
-curl -i https://api.bn.test.biocommons.org.au/beacon-network/v2.0.0/info
+curl -i https://api.example.org/beacon-network/v2.0.0/info
 ```
 
 ## 3. Frontend config to API HTTPS endpoint
@@ -70,13 +70,13 @@ Example runtime `public/config.json`:
 
 ```json
 {
-  "apiBaseUrl": "https://api.bn.test.biocommons.org.au/beacon-network/v2.0.0"
+  "apiBaseUrl": "https://api.example.org/beacon-network/v2.0.0"
 }
 ```
 
 If frontend and API are different origins, configure backend CORS for:
 
-- origin: frontend URL (for example `https://bn.test.biocommons.org.au`)
+- origin: frontend URL (for example `https://app.example.org`)
 - methods: `GET, OPTIONS`
 - required headers (at least `Content-Type`)
 
@@ -123,7 +123,7 @@ aws cloudformation deploy \
     PublicSubnet2Id=subnet-bbbbbbbb \
     BackendInstanceId=i-0123456789abcdef0 \
     CertificateArn=arn:aws:acm:ap-southeast-2:123456789012:certificate/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx \
-    ApiDomainName=api.bn.test.biocommons.org.au \
+    ApiDomainName=api.example.org \
     HostedZoneId=Z1234567890ABC \
     BackendSecurityGroupId=sg-0123abcd4567efgh8
 ```

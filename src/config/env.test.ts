@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { loadRuntimeConfig, parseAppConfig } from "./env";
+import { appConfig, loadRuntimeConfig, parseAppConfig } from "./env";
 
 describe("parseAppConfig", () => {
   it("uses defaults when env vars are missing", () => {
@@ -8,7 +8,7 @@ describe("parseAppConfig", () => {
     expect(cfg.apiBaseUrl).toContain("beacon-network/v2.0.0");
     expect(cfg.requestTimeoutMs).toBe(10000);
     expect(cfg.retryCount).toBe(1);
-    expect(cfg.appTitle).toBe("GUARDIANS Beacon Network");
+    expect(cfg.appTitle).toBe("Beacon Network");
     expect(cfg.enableDebugLogs).toBe(false);
   });
 
@@ -35,6 +35,20 @@ describe("loadRuntimeConfig", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(loadRuntimeConfig()).resolves.toBeUndefined();
+
+    vi.unstubAllGlobals();
+  });
+
+  it("does not overwrite existing config when runtime config is empty", async () => {
+    const before = { ...appConfig };
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({})
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(loadRuntimeConfig()).resolves.toBeUndefined();
+    expect(appConfig).toEqual(before);
 
     vi.unstubAllGlobals();
   });

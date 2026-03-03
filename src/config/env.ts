@@ -1,9 +1,8 @@
 const defaultConfig = {
-  apiBaseUrl:
-    "https://api.bn.test.biocommons.org.au/beacon-network/v2.0.0",
+  apiBaseUrl: "https://localhost/beacon-network/v2.0.0",
   requestTimeoutMs: 10000,
   retryCount: 1,
-  appTitle: "GUARDIANS Beacon Network",
+  appTitle: "Beacon Network",
   enableDebugLogs: false
 } as const;
 
@@ -74,7 +73,7 @@ const parseRuntimeConfig = (payload: unknown): Partial<AppConfig> => {
   const apiBaseUrl = asNonEmptyString(record.apiBaseUrl, isValidUrl);
   const appTitle = asNonEmptyString(record.appTitle);
 
-  return {
+  const candidate: Partial<AppConfig> = {
     apiBaseUrl,
     requestTimeoutMs:
       typeof record.requestTimeoutMs === "number" &&
@@ -94,6 +93,10 @@ const parseRuntimeConfig = (payload: unknown): Partial<AppConfig> => {
         ? record.enableDebugLogs
         : undefined
   };
+
+  return Object.fromEntries(
+    Object.entries(candidate).filter(([, value]) => value !== undefined)
+  ) as Partial<AppConfig>;
 };
 
 export const parseAppConfig = (env: EnvLike): AppConfig => {

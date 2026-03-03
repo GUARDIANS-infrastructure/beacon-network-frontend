@@ -13,6 +13,11 @@ env:
   AWS_REGION: ${{ vars.AWS_REGION }}
   S3_BUCKET: ${{ vars.AWS_S3_BUCKET }}
   CLOUDFRONT_DISTRIBUTION_ID: ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }}
+  VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+  VITE_REQUEST_TIMEOUT_MS: ${{ vars.VITE_REQUEST_TIMEOUT_MS }}
+  VITE_RETRY_COUNT: ${{ vars.VITE_RETRY_COUNT }}
+  VITE_APP_TITLE: ${{ vars.VITE_APP_TITLE }}
+  VITE_ENABLE_DEBUG_LOGS: ${{ vars.VITE_ENABLE_DEBUG_LOGS }}
 
 jobs:
   deploy:
@@ -37,17 +42,14 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Write runtime config
+      - name: Write runtime partner logos
         env:
-          APP_CONFIG_JSON: ${{ secrets.APP_CONFIG_JSON }}
+          APP_PARTNERS_JSON: ${{ secrets.APP_PARTNERS_JSON }}
         run: |
-          if [ -z "$APP_CONFIG_JSON" ]; then
-            echo "APP_CONFIG_JSON secret is required." >&2
-            exit 1
+          if [ -n "$APP_PARTNERS_JSON" ]; then
+            printf '%s' "$APP_PARTNERS_JSON" > dist/partners.json
+            jq empty dist/partners.json
           fi
-
-          printf '%s' "$APP_CONFIG_JSON" > dist/config.json
-          jq empty dist/config.json
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
@@ -69,6 +71,12 @@ jobs:
           aws s3 cp dist/config.json "s3://${S3_BUCKET}/config.json" \
             --content-type application/json \
             --cache-control "no-cache, no-store, must-revalidate"
+
+          if [ -f dist/partners.json ]; then
+            aws s3 cp dist/partners.json "s3://${S3_BUCKET}/partners.json" \
+              --content-type application/json \
+              --cache-control "no-cache, no-store, must-revalidate"
+          fi
 
       - name: Invalidate CloudFront cache
         run: |

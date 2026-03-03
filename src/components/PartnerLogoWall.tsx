@@ -1,51 +1,72 @@
-// src/components/PartnerLogoWall.tsx
-type Logo = {
-  src: string;
-  alt: string;
-  href?: string; // optional partner link
-};
-
-const LOGOS: Logo[] = [
-  { src: "/logos/logo_01.png", alt: "Partner 1" },
-  { src: "/logos/logo_02.png", alt: "Partner 2" },
-  { src: "/logos/logo_03.png", alt: "Partner 3" },
-  { src: "/logos/logo_04.png", alt: "Partner 4" },
-  { src: "/logos/logo_05.png", alt: "Partner 5" },
-  { src: "/logos/logo_06.png", alt: "Partner 6" },
-  { src: "/logos/logo_07.jpg", alt: "Partner 7" },
-  { src: "/logos/logo_08.png", alt: "Partner 8" },
-  { src: "/logos/logo_09.png", alt: "Partner 9" },
-  { src: "/logos/logo_10.jpg", alt: "Partner 10" },
-];
+import { useEffect, useState } from "react";
+import { DEFAULT_LOGOS, parsePartnerLogos, type Logo } from "./partnerLogos";
 
 export function PartnerLogoWall() {
+  const [logos, setLogos] = useState<Logo[]>(DEFAULT_LOGOS);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadLogos = async (): Promise<void> => {
+      try {
+        const response = await fetch("/partners.json", {
+          headers: {
+            Accept: "application/json"
+          }
+        });
+
+        if (!response.ok) {
+          return;
+        }
+
+        const parsed = parsePartnerLogos(await response.json());
+        if (!cancelled) {
+          setLogos(parsed);
+        }
+      } catch {
+        // Keep default logos when runtime file is unavailable or invalid.
+      }
+    };
+
+    void loadLogos();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (logos.length === 0) {
+    return null;
+  }
+
   return (
-    <section aria-label="GUARDIANS partners" className="logoWall">
+    <footer>
+      <section aria-label="Partner logos" className="logoWall">
+        <ul className="logoGrid">
+          {logos.map((logo) => {
+            const img = (
+              <img
+                src={logo.src}
+                alt={logo.alt}
+                loading="lazy"
+                decoding="async"
+              />
+            );
 
-      <ul className="logoGrid">
-        {LOGOS.map((logo) => {
-          const img = (
-            <img
-              src={logo.src}
-              alt={logo.alt}
-              loading="lazy"
-              decoding="async"
-            />
-          );
-
-          return (
-            <li key={logo.src} className="logoTile">
-              {logo.href ? (
-                <a href={logo.href} target="_blank" rel="noreferrer">
-                  {img}
-                </a>
-              ) : (
-                img
-              )}
-            </li>
-          );
-        })}
-      </ul>
-    </section>
+            return (
+              <li key={logo.src} className="logoTile">
+                {logo.href ? (
+                  <a href={logo.href} target="_blank" rel="noreferrer">
+                    {img}
+                  </a>
+                ) : (
+                  img
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+    </footer>
   );
 }

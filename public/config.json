@@ -1,7 +1,1 @@
-{
-  "apiBaseUrl": "https://api.bn.test.biocommons.org.au/beacon-network/v2.0.0",
-  "requestTimeoutMs": 10000,
-  "retryCount": 1,
-  "appTitle": "GUARDIANS Beacon Network",
-  "enableDebugLogs": false
-}
+{}

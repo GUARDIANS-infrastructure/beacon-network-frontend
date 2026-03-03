@@ -49,6 +49,39 @@ Supported JSON fields:
 
 Only valid fields are applied.
 
+Repository convention:
+
+- `public/config.json` is committed as `{}` (neutral runtime default).
+- `public/config.json.example` documents a full example runtime payload.
+
+## Runtime partner logos (`/partners.json`)
+
+Partner logos are configured independently via optional runtime JSON at `/partners.json`.
+
+Default behavior:
+
+- No logos are shown unless valid entries are provided in `/partners.json`.
+- The footer logo section is hidden when there are no logos.
+
+Expected shape:
+
+```json
+[
+  {
+    "src": "/logos/logo-example.png",
+    "alt": "Example Organization",
+    "href": "https://example.org/"
+  }
+]
+```
+
+Rules:
+
+- `src` and `alt` are required non-empty strings.
+- `href` is optional.
+- Invalid entries are ignored.
+- If file is missing/invalid/empty, no logos are rendered.
+
 ## Missing or invalid `config.json`
 
 If `/config.json` is missing, non-200, or cannot be parsed:
@@ -65,6 +98,7 @@ If `/config.json` is missing, non-200, or cannot be parsed:
 - Prod (static hosting):
   - `VITE_*` values are fixed at build time.
   - Operators can change deployed `/config.json` to adjust runtime config without rebuilding.
+  - The release workflow builds with GitHub environment `VITE_*` variables.
 
 ## Dev proxy variable
 

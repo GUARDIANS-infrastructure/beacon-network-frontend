@@ -1,0 +1,52 @@
+[
+  {
+    "src": "/logos/zerocci.png",
+    "alt": "ZERO Childhood Cancer",
+    "href": "https://www.ccia.org.au/"
+  },
+  {
+    "src": "/logos/qimrb.png",
+    "alt": "QIMR Berghofer Medical Research Institute",
+    "href": "https://www.qimrberghofer.edu.au/"
+  },
+  {
+    "src": "/logos/garvan.png",
+    "alt": "Garvan Institute of Medical Research",
+    "href": "https://www.garvan.org.au/"
+  },
+  {
+    "src": "/logos/nci.png",
+    "alt": "National Computational Infrastructure",
+    "href": "https://nci.org.au/"
+  },
+  {
+    "src": "/logos/aaf.png",
+    "alt": "Australian Access Federation",
+    "href": "https://aaf.edu.au/"
+  },
+  {
+    "src": "/logos/usyd.png",
+    "alt": "The University of Sydney",
+    "href": "https://www.sydney.edu.au/"
+  },
+  {
+    "src": "/logos/uom.png",
+    "alt": "The University of Melbourne",
+    "href": "https://www.unimelb.edu.au/"
+  },
+  {
+    "src": "/logos/biocommons.png",
+    "alt": "Australian BioCommons",
+    "href": "https://www.biocommons.org.au/"
+  },
+  {
+    "src": "/logos/bpa.png",
+    "alt": "Bioplatforms Australia",
+    "href": "https://bioplatforms.com/"
+  },
+  {
+    "src": "/logos/ncris.png",
+    "alt": "National Collaborative Research Infrastructure Strategy",
+    "href": "https://www.education.gov.au/ncris"
+  }
+]
