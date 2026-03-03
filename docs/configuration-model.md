@@ -48,6 +48,16 @@ Supported JSON fields:
 - `enableDebugLogs` (boolean)
 
 Only valid fields are applied.
+Partial `/config.json` is supported: only provided valid keys override existing config; missing keys keep current build-time/default values.
+An empty object (`{}`) is valid and results in no runtime overrides.
+
+Example partial runtime config:
+
+```json
+{
+  "appTitle": "Example Beacon"
+}
+```
 
 Repository convention:
 

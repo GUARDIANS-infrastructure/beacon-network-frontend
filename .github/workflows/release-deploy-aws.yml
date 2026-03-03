@@ -42,15 +42,6 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Write runtime partner logos
-        env:
-          APP_PARTNERS_JSON: ${{ secrets.APP_PARTNERS_JSON }}
-        run: |
-          if [ -n "$APP_PARTNERS_JSON" ]; then
-            printf '%s' "$APP_PARTNERS_JSON" > dist/partners.json
-            jq empty dist/partners.json
-          fi
-
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:

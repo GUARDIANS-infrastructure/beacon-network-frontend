@@ -1,6 +1,6 @@
 # AWS Infrastructure Runbook
 
-AWS-specific deployment and operations guidance for exposing the Beacon backend over HTTPS while keeping the EC2 service HTTP-only internally.
+AWS-specific deployment and operations guidance for serving the frontend over HTTPS and exposing an HTTPS API endpoint via ALB, while keeping WildFly on EC2 HTTP-only internally.
 
 ## Scope
 
@@ -8,32 +8,32 @@ This runbook covers:
 
 - backend service on EC2 (`HTTP:8080`) with restricted security-group access
 - ALB + ACM certificate + Route53 public HTTPS endpoint
-- frontend configuration to consume API over HTTPS
+- frontend configuration to call API over HTTPS
 - CloudFront/S3 cache behavior during frontend deploys
 - minimal CloudFormation template for repeatable setup
 
-## HTTPS requirement (why)
+## API HTTPS requirement
 
 - Browsers block mixed content.
 - If frontend is loaded from `https://...`, calls to `http://...` are blocked client-side.
-- Browser-facing API endpoints must therefore be HTTPS.
+- Therefore the frontend must call the API over HTTPS.
 
-## 1. Backend EC2 and security groups (HTTP internal only)
+Reference traffic flow:
+
+- Browser -> Frontend static site: `HTTPS`
+- Browser -> API endpoint (ALB/Route53): `HTTPS`
+- ALB -> WildFly on EC2: `HTTP:8080` (internal VPC hop)
+
+## 1. Backend EC2 (WildFly) and security groups (HTTP internal only)
 
 - Instance can remain in existing VPC (including default VPC).
-- App listens on `8080` and serves:
+- WildFly backend service listens on `HTTP:8080` and serves:
   - `/beacon-network/v2.0.0/info`
   - `/beacon-network/v2.0.0/configuration`
   - `/beacon-network/v2.0.0/cohorts`
 - Restrict EC2 inbound rule:
   - allow `TCP 8080` from ALB security group only
   - remove `0.0.0.0/0` access to port `8080`
-
-Quick backend check on instance:
-
-```bash
-curl -i https://localhost/beacon-network/v2.0.0/info
-```
 
 ## 2. ALB + ACM cert + Route53
 
@@ -47,6 +47,7 @@ curl -i https://localhost/beacon-network/v2.0.0/info
    - target type: `instance`
    - protocol/port: `HTTP:8080`
    - health check path: `/beacon-network/v2.0.0/info`
+   - this is ALB -> EC2 internal HTTP traffic
 4. Register EC2 target and verify `Healthy`.
 5. Add ALB listeners:
    - `HTTPS :443` -> forward to target group
@@ -61,7 +62,7 @@ curl -i https://api.example.org/beacon-network/v2.0.0/info
 
 ## 3. Frontend config to API HTTPS endpoint
 
-Use HTTPS base URL in production:
+Use an HTTPS API base URL in production:
 
 - build-time: `VITE_API_BASE_URL`
 - runtime override: `/config.json` `apiBaseUrl`

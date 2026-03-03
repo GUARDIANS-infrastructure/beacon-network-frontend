@@ -54,18 +54,6 @@ Build-time note:
 - Release deploy uses `VITE_*` GitHub environment variables at build time.
 - Runtime `/config.json` remains available for post-deploy overrides (for example uploading a non-empty `config.json` to S3).
 
-Example `APP_PARTNERS_JSON`:
-
-```json
-[
-  {
-    "src": "/logos/partner-a.png",
-    "alt": "Partner A",
-    "href": "https://partner-a.example.org/"
-  }
-]
-```
-
 ## AWS operator runbook
 
 For AWS-specific backend/API edge setup (EC2 + ALB + ACM + Route53), see:
