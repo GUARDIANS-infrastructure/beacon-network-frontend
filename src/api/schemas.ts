@@ -1,4 +1,8 @@
-import type { BeaconEnvelope, CohortSummary, PhenotypeCount } from "./types";
+import type {
+  BeaconEnvelope,
+  CohortDistributionEntry,
+  CohortSummary
+} from "./types";
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
@@ -6,35 +10,78 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const asString = (value: unknown): string | null =>
   typeof value === "string" && value.trim() !== "" ? value.trim() : null;
 
-const parseTopPhenotypes = (item: Record<string, unknown>): PhenotypeCount[] => {
-  const events = Array.isArray(item.collectionEvents) ? item.collectionEvents : [];
-  const counts = new Map<string, number>();
+const getCollectionEvents = (item: Record<string, unknown>): Record<string, unknown>[] => {
+  if (Array.isArray(item.collectionEvents)) {
+    return item.collectionEvents.filter(isRecord);
+  }
 
-  events.filter(isRecord).forEach((event) => {
+  if (isRecord(item.collectionEvents)) {
+    return [item.collectionEvents];
+  }
+
+  return [];
+};
+
+const addDistributionEntry = (
+  entries: Map<string, CohortDistributionEntry>,
+  term: string | null,
+  ontologyId: string | null,
+  count: unknown
+): void => {
+  if (
+    !term ||
+    typeof count !== "number" ||
+    !Number.isFinite(count) ||
+    count <= 0
+  ) {
+    return;
+  }
+
+  const key = `${term}\u0000${ontologyId ?? ""}`;
+  const existing = entries.get(key);
+  entries.set(key, {
+    term,
+    ontologyId,
+    count: (existing?.count ?? 0) + count
+  });
+};
+
+const parseDistribution = (
+  item: Record<string, unknown>
+): CohortDistributionEntry[] => {
+  const entries = new Map<string, CohortDistributionEntry>();
+
+  getCollectionEvents(item).forEach((event) => {
+    const eventDisease = isRecord(event.eventDisease) ? event.eventDisease : null;
+    const diseaseDistribution = eventDisease?.distribution;
+
+    if (Array.isArray(diseaseDistribution)) {
+      diseaseDistribution.filter(isRecord).forEach((entry) => {
+        const disease = isRecord(entry.disease) ? entry.disease : null;
+        const label = disease ? asString(disease.label) : null;
+        const ontologyId = disease ? asString(disease.id) : null;
+        addDistributionEntry(entries, label ?? ontologyId, ontologyId, entry.count);
+      });
+    }
+
     const eventPhenotypes = isRecord(event.eventPhenotypes)
       ? event.eventPhenotypes
       : null;
-    const distribution =
+    const phenotypeDistribution =
       eventPhenotypes && isRecord(eventPhenotypes.distribution)
         ? eventPhenotypes.distribution
         : null;
 
-    if (!distribution) {
+    if (!phenotypeDistribution) {
       return;
     }
 
-    Object.entries(distribution).forEach(([term, value]) => {
-      if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
-        return;
-      }
-      counts.set(term, (counts.get(term) ?? 0) + value);
+    Object.entries(phenotypeDistribution).forEach(([term, count]) => {
+      addDistributionEntry(entries, term, null, count);
     });
   });
 
-  return Array.from(counts.entries())
-    .map(([term, count]) => ({ term, count }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 12);
+  return Array.from(entries.values()).sort((a, b) => b.count - a.count);
 };
 
 export const parseBeaconEnvelope = (payload: unknown): BeaconEnvelope => {
@@ -145,7 +192,7 @@ export const parseCohorts = (payload: unknown): CohortSummary[] => {
             .filter(isRecord)
             .map((condition) => asString(condition.notes))
             .find((note): note is string => note !== null) ?? null,
-        topPhenotypes: parseTopPhenotypes(item),
+        distribution: parseDistribution(item),
         raw: item
       };
     })

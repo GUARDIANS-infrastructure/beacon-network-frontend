@@ -6,8 +6,9 @@ export type BeaconEnvelope = {
   beaconHandovers?: unknown[];
 };
 
-export type PhenotypeCount = {
+export type CohortDistributionEntry = {
   term: string;
+  ontologyId: string | null;
   count: number;
 };
 
@@ -22,6 +23,6 @@ export type CohortSummary = {
   phenotypeCodes: string[];
   phenotypeTerms: string[];
   description: string | null;
-  topPhenotypes: PhenotypeCount[];
+  distribution: CohortDistributionEntry[];
   raw: Record<string, unknown>;
 };

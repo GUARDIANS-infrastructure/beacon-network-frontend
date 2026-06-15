@@ -261,13 +261,21 @@ Common optional enrichments:
       - `notes` (string, optional)
 
 Potentially large nested content (guardrails required):
-- `collectionEvents` (array, optional)
+- `collectionEvents` (array, optional) — observed on DSP/Garvan
   - items:
     - `eventDataTypes.availability` (boolean, optional)
     - `eventDataTypes.availabilityCount` (number, optional)
     - `eventPhenotypes.availability` (boolean, optional)
     - `eventPhenotypes.availabilityCount` (number, optional)
     - `eventPhenotypes.distribution` (object map<string, number>, optional)
+- `collectionEvents` (object, optional) — observed on ZERO Childhood Cancer
+  - `eventDisease.availability` (boolean, optional)
+  - `eventDisease.availabilityCount` (number, optional)
+  - `eventDisease.distribution` (array, optional)
+    - items:
+      - `count` (number, optional)
+      - `disease.id` (string, optional)
+      - `disease.label` (string, optional)
 
 ### UI behavior
 
@@ -281,7 +289,7 @@ Display (best-effort):
 
 Search:
 - substring match over `name` and `id` (default)
-- optional toggle later: include disease label/notes in search (off by default)
+- includes parsed disease/phenotype codes, labels, notes, and distribution terms
 
 Sorting:
 - default: by `name` then `id`
@@ -292,9 +300,13 @@ Show:
 - inclusion criteria sections
   - disease conditions: show `diseaseCode.label` if present else `diseaseCode.id`
   - notes (if present) in collapsible block
-- if `collectionEvents[].eventPhenotypes.distribution` is present:
-  - show top N (e.g. 20) by count with “show more”
-  - do not render full map unbounded by default
+- if a cohort distribution is present, show a generic “Distribution” table:
+  - `Term`
+  - `Ontology ID` (empty when not supplied)
+  - `Count`
+- distribution sources currently normalized:
+  - DSP/Garvan: `collectionEvents[].eventPhenotypes.distribution`
+  - ZERO Childhood Cancer: `collectionEvents.eventDisease.distribution[]`
 - show `beaconHandovers` callout if present
 
 Performance:

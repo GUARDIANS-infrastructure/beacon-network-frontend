@@ -1,4 +1,4 @@
-import { type ReactElement, useMemo, useState } from "react";
+import { type ReactElement, useEffect, useMemo, useState } from "react";
 import { fetchCohorts } from "../api/client";
 import type { CohortSummary } from "../api/types";
 import { EmptyState } from "../components/EmptyState";
@@ -8,30 +8,24 @@ import { LoadingState } from "../components/LoadingState";
 import { formatLocalTimestamp } from "../utils/time";
 import { useEndpointData } from "./useEndpointData";
 
-const joinList = (items: string[]): string =>
-  items.length > 0 ? items.join(", ") : "Unknown";
+const joinList = (items: string[]): string => items.join(", ");
 
 function CohortDetailPage({
-  cohort,
-  onBack
+  cohort
 }: {
   cohort: CohortSummary;
-  onBack: () => void;
 }): ReactElement {
   return (
     <div>
-      <button onClick={onBack} type="button">
-        Back to cohorts
-      </button>
       <h3>{cohort.name}</h3>
       <p>
         <strong>ID:</strong> {cohort.id}
       </p>
       <p>
-        <strong>Size:</strong> {cohort.cohortSize ?? "Unknown"}
+        <strong>Size:</strong> {cohort.cohortSize ?? ""}
       </p>
       <p>
-        <strong>Type:</strong> {cohort.cohortType ?? "Unknown"}
+        <strong>Type:</strong> {cohort.cohortType ?? ""}
       </p>
       <p>
         <strong>Data types:</strong> {joinList(cohort.dataTypes)}
@@ -40,27 +34,29 @@ function CohortDetailPage({
         <strong>Disease codes:</strong> {joinList(cohort.diseaseCodes)}
       </p>
       <p>
-        <strong>Phenotype categories:</strong> {joinList(cohort.phenotypeCodes)}
+        <strong>Phenotypic conditions:</strong> {joinList(cohort.phenotypeCodes)}
       </p>
       <p>
-        <strong>Description:</strong> {cohort.description ?? "Unknown"}
+        <strong>Description:</strong> {cohort.description ?? ""}
       </p>
 
-      <h4>Top phenotype terms</h4>
-      {cohort.topPhenotypes.length === 0 ? (
-        <p>Unknown</p>
+      <h4>Distribution</h4>
+      {cohort.distribution.length === 0 ? (
+        <p />
       ) : (
         <table>
           <thead>
             <tr>
-              <th>Phenotype term</th>
+              <th>Term</th>
+              <th>Ontology ID</th>
               <th>Count</th>
             </tr>
           </thead>
           <tbody>
-            {cohort.topPhenotypes.map((item) => (
-              <tr key={item.term}>
+            {cohort.distribution.map((item) => (
+              <tr key={`${item.term}-${item.ontologyId ?? ""}`}>
                 <td>{item.term}</td>
+                <td>{item.ontologyId ?? ""}</td>
                 <td>{item.count}</td>
               </tr>
             ))}
@@ -73,10 +69,14 @@ function CohortDetailPage({
   );
 }
 
-export function CohortsPage(): ReactElement {
+export function CohortsPage({ resetToken }: { resetToken: number }): ReactElement {
   const { data, error, loading, fetchedAt, refresh } = useEndpointData(fetchCohorts);
   const [search, setSearch] = useState<string>("");
   const [selectedCohortId, setSelectedCohortId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSelectedCohortId(null);
+  }, [resetToken]);
 
   const rows = useMemo(() => {
     const base = data ?? [];
@@ -93,8 +93,10 @@ export function CohortsPage(): ReactElement {
         item.diseaseTerms.some((term) => term.toLowerCase().includes(query)) ||
         item.phenotypeCodes.some((code) => code.toLowerCase().includes(query)) ||
         item.phenotypeTerms.some((term) => term.toLowerCase().includes(query)) ||
-        item.topPhenotypes.some((phenotype) =>
-          phenotype.term.toLowerCase().includes(query)
+        item.distribution.some(
+          (entry) =>
+            entry.term.toLowerCase().includes(query) ||
+            (entry.ontologyId ?? "").toLowerCase().includes(query)
         ) ||
         (item.description ?? "").toLowerCase().includes(query)
     );
@@ -109,16 +111,13 @@ export function CohortsPage(): ReactElement {
 
   return (
     <section>
-      <h2>Cohorts</h2>
+      {!selectedCohort ? <h2>Cohorts</h2> : null}
       {fetchedAt ? <p>Last fetched: {formatLocalTimestamp(fetchedAt)}</p> : null}
       {loading ? <LoadingState /> : null}
       {error ? <ErrorState message={error} onRetry={() => void refresh()} /> : null}
 
       {!loading && !error && selectedCohort ? (
-        <CohortDetailPage
-          cohort={selectedCohort}
-          onBack={() => setSelectedCohortId(null)}
-        />
+        <CohortDetailPage cohort={selectedCohort} />
       ) : null}
 
       {!loading && !error && !selectedCohort ? (

@@ -15,6 +15,14 @@ const pageNavItems: Array<{ key: PageKey; label: string }> = [
 
 export default function App(): ReactElement {
   const [page, setPage] = useState<PageKey>("cohorts");
+  const [cohortsResetToken, setCohortsResetToken] = useState<number>(0);
+
+  const selectPage = (key: PageKey): void => {
+    if (key === "cohorts") {
+      setCohortsResetToken((value) => value + 1);
+    }
+    setPage(key);
+  };
 
   return (
     <div className="app-shell">
@@ -28,7 +36,7 @@ export default function App(): ReactElement {
           <button
             key={key}
             className={key === page ? "active" : ""}
-            onClick={() => setPage(key)}
+            onClick={() => selectPage(key)}
             type="button"
           >
             {label}
@@ -39,7 +47,7 @@ export default function App(): ReactElement {
       <main>
         {page === "overview" && <OverviewPage />}
         {page === "configuration" && <ConfigurationPage />}
-        {page === "cohorts" && <CohortsPage />}
+        {page === "cohorts" && <CohortsPage resetToken={cohortsResetToken} />}
       </main>
 
       <PartnerLogoWall />
