@@ -246,14 +246,14 @@ Common optional enrichments:
   - items:
     - `id` (string, optional)
     - `label` (string, optional)
-- `cohortDesign` (object, optional) — observed on b2
+- `cohortDesign` (object, optional)
   - `id` (string, optional)
   - `label` (string, optional)
 - `inclusionCriteria` (object, optional)
   - `diseaseConditions` (array, optional)
     - items:
       - `diseaseCode.id` (string, optional)
-      - `diseaseCode.label` (string, optional) — observed on b2
+      - `diseaseCode.label` (string, optional)
       - `notes` (string, optional) — observed on b1
   - `phenotypicConditions` (array, optional)
     - items:
@@ -268,10 +268,10 @@ Potentially large nested content (guardrails required):
     - `eventPhenotypes.availability` (boolean, optional)
     - `eventPhenotypes.availabilityCount` (number, optional)
     - `eventPhenotypes.distribution` (object map<string, number>, optional)
-- `collectionEvents` (object, optional) — observed on ZERO Childhood Cancer
-  - `eventDisease.availability` (boolean, optional)
-  - `eventDisease.availabilityCount` (number, optional)
-  - `eventDisease.distribution` (array, optional)
+- `collectionEvents` (array, optional) — observed on ZERO Childhood Cancer
+  - `eventDiseases.availability` (boolean, optional)
+  - `eventDiseases.availabilityCount` (number, optional)
+  - `eventDiseases.distribution` (array, optional)
     - items:
       - `count` (number, optional)
       - `disease.id` (string, optional)
@@ -306,7 +306,7 @@ Show:
   - `Count`
 - distribution sources currently normalized:
   - DSP/Garvan: `collectionEvents[].eventPhenotypes.distribution`
-  - ZERO Childhood Cancer: `collectionEvents.eventDisease.distribution[]`
+  - ZERO Childhood Cancer: `collectionEvents[].eventDiseases.distribution[]`
 - show `beaconHandovers` callout if present
 
 Performance:

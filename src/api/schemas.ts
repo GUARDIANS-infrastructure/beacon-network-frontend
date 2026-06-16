@@ -22,6 +22,11 @@ const getCollectionEvents = (item: Record<string, unknown>): Record<string, unkn
   return [];
 };
 
+const getDistribution = (event: Record<string, unknown>, key: string): unknown => {
+  const value = event[key];
+  return isRecord(value) ? value.distribution : null;
+};
+
 const addDistributionEntry = (
   entries: Map<string, CohortDistributionEntry>,
   term: string | null,
@@ -52,8 +57,7 @@ const parseDistribution = (
   const entries = new Map<string, CohortDistributionEntry>();
 
   getCollectionEvents(item).forEach((event) => {
-    const eventDisease = isRecord(event.eventDisease) ? event.eventDisease : null;
-    const diseaseDistribution = eventDisease?.distribution;
+    const diseaseDistribution = getDistribution(event, "eventDiseases");
 
     if (Array.isArray(diseaseDistribution)) {
       diseaseDistribution.filter(isRecord).forEach((entry) => {
@@ -64,21 +68,13 @@ const parseDistribution = (
       });
     }
 
-    const eventPhenotypes = isRecord(event.eventPhenotypes)
-      ? event.eventPhenotypes
-      : null;
-    const phenotypeDistribution =
-      eventPhenotypes && isRecord(eventPhenotypes.distribution)
-        ? eventPhenotypes.distribution
-        : null;
+    const phenotypeDistribution = getDistribution(event, "eventPhenotypes");
 
-    if (!phenotypeDistribution) {
-      return;
+    if (isRecord(phenotypeDistribution)) {
+      Object.entries(phenotypeDistribution).forEach(([term, count]) => {
+        addDistributionEntry(entries, term, null, count);
+      });
     }
-
-    Object.entries(phenotypeDistribution).forEach(([term, count]) => {
-      addDistributionEntry(entries, term, null, count);
-    });
   });
 
   return Array.from(entries.values()).sort((a, b) => b.count - a.count);
