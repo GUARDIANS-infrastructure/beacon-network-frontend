@@ -135,9 +135,15 @@ Per-beacon `responses[]` items:
   - `response.description`,
   - `response.environment`,
   - `meta.apiVersion`.
-- Render `metadata_errors` as an expandable section (count + list).
-- If `responses[]` is present, show a “Constituent beacons” table/list with:
-  - name/id, apiVersion, environment, updateDateTime, and link to `welcomeUrl` or `alternativeUrl`.
+- If `responses[]` is present, show one “Constituent beacons” table with:
+  - beacon name (fallback: id/meta beacon ID), and
+  - `welcomeUrl` only.
+- Label `welcomeUrl` as a welcome URL, never as a constituent API root. Do not
+  infer or display a root URL from `alternativeUrl`, error messages, or other
+  response content.
+- Render `metadata_errors` as a collapsed “Metadata errors” table. Show each
+  reported error’s endpoint, path, and message; the reported endpoint is not
+  necessarily a constituent API root.
 
 ---
 

@@ -110,6 +110,43 @@ td {
   text-align: left;
 }
 
+.table-note {
+  color: #4b5563;
+  font-size: 0.9rem;
+  margin-top: -0.5rem;
+}
+
+.metadata-errors {
+  margin-top: 1rem;
+}
+
+.metadata-errors summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.metadata-error-badge {
+  background: #fdecec;
+  border-radius: 999px;
+  color: #9a1f1f;
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  margin-left: 0.35rem;
+  padding: 0.15rem 0.45rem;
+  text-transform: uppercase;
+}
+
+.metadata-errors table {
+  table-layout: fixed;
+}
+
+.metadata-errors td {
+  overflow-wrap: anywhere;
+  vertical-align: top;
+}
+
 .status-badge {
   border-radius: 999px;
   display: inline-block;

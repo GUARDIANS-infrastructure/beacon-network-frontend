@@ -7,82 +7,109 @@ import { JsonPanel } from "../components/JsonPanel";
 import { LoadingState } from "../components/LoadingState";
 import { formatLocalTimestamp } from "../utils/time";
 import { useEndpointData } from "./useEndpointData";
+import {
+  getConstituentBeaconSummaries,
+  getMetadataErrorRows,
+  type ConstituentBeaconSummary,
+  type MetadataErrorRow
+} from "./overviewInfo";
 
-type ConstituentStatus = {
-  key: string;
-  endpoint: string;
-  beacon: string;
-  status: "ok" | "error";
-  detail: string;
-};
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null;
-
-const asString = (value: unknown): string | undefined =>
-  typeof value === "string" && value.trim() !== "" ? value : undefined;
-
-const getConstituentStatuses = (data: BeaconEnvelope): ConstituentStatus[] => {
-  const errorRows: ConstituentStatus[] = [];
-  const responseRows: ConstituentStatus[] = [];
-  const seen = new Set<string>();
-
-  const metadataErrors = data.response?.info;
-  if (isRecord(metadataErrors) && Array.isArray(metadataErrors.metadata_errors)) {
-    metadataErrors.metadata_errors
-      .filter(isRecord)
-      .forEach((item, index) => {
-        const endpoint = asString(item.endpoint) ?? `Unknown endpoint ${index + 1}`;
-        const errors = Array.isArray(item.errors) ? item.errors : [];
-        const firstMessage = errors.find(isRecord)?.message;
-        const detail = asString(firstMessage) ?? "Constituent endpoint returned an error.";
-        const key = `error:${endpoint}:${index}`;
-        errorRows.push({
-          key,
-          endpoint,
-          beacon: "Unknown",
-          status: "error",
-          detail
-        });
-        seen.add(endpoint);
-      });
+function ConstituentBeaconTable({
+  summaries
+}: {
+  summaries: ConstituentBeaconSummary[];
+}): ReactElement {
+  if (summaries.length === 0) {
+    return <p>None reported.</p>;
   }
 
-  if (Array.isArray(data.responses)) {
-    data.responses.filter(isRecord).forEach((item, index) => {
-      const response = isRecord(item.response) ? item.response : undefined;
-      const meta = isRecord(item.meta) ? item.meta : undefined;
-      const beacon =
-        asString(response?.name) ??
-        asString(response?.id) ??
-        asString(meta?.beaconId) ??
-        `Constituent ${index + 1}`;
-      const endpoint =
-        asString(response?.alternativeUrl) ??
-        asString(response?.welcomeUrl) ??
-        asString(meta?.beaconId) ??
-        `Unknown endpoint ${index + 1}`;
+  return (
+    <table>
+      <thead>
+        <tr>
+          <th>Beacon</th>
+          <th>Welcome URL</th>
+        </tr>
+      </thead>
+      <tbody>
+        {summaries.map((summary) => (
+          <tr key={summary.key}>
+            <td>{summary.beacon}</td>
+            <td>
+              {summary.welcomeUrl ? (
+                <a href={summary.welcomeUrl} rel="noreferrer" target="_blank">
+                  {summary.welcomeUrl}
+                </a>
+              ) : (
+                "Unknown"
+              )}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
 
-      if (seen.has(endpoint)) {
-        return;
-      }
-
-      responseRows.push({
-        key: `ok:${endpoint}:${index}`,
-        endpoint,
-        beacon,
-        status: "ok",
-        detail: "Valid response received."
-      });
-    });
+function MetadataErrorsTable({ rows }: { rows: MetadataErrorRow[] }): ReactElement | null {
+  if (rows.length === 0) {
+    return null;
   }
 
-  return [...errorRows, ...responseRows];
-};
+  return (
+    <details className="metadata-errors">
+      <summary>
+        Metadata errors <span className="metadata-error-badge">{rows.length} reported</span>
+      </summary>
+      <p>These are reported by the network backend.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Reported endpoint</th>
+            <th>Path</th>
+            <th>Message</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.key}>
+              <td>{row.endpoint}</td>
+              <td>{row.path ?? "Unknown"}</td>
+              <td>{row.message}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </details>
+  );
+}
+
+export function OverviewContent({ data }: { data: BeaconEnvelope }): ReactElement {
+  const summaries = getConstituentBeaconSummaries(data);
+  const metadataErrorRows = getMetadataErrorRows(data);
+
+  return (
+    <>
+      <p>
+        Beacon ID: {typeof data.meta?.beaconId === "string" ? data.meta.beaconId : "Unknown"}
+      </p>
+      <p>
+        API version: {typeof data.meta?.apiVersion === "string" ? data.meta.apiVersion : "Unknown"}
+      </p>
+      <h3>Constituent beacons</h3>
+      <p className="table-note">
+        Welcome URLs are info published by the constituent responses; they are not
+        necessarily constituent API root URLs.
+      </p>
+      <ConstituentBeaconTable summaries={summaries} />
+      <MetadataErrorsTable rows={metadataErrorRows} />
+      <JsonPanel title="/info response" value={data} />
+    </>
+  );
+}
 
 export function OverviewPage(): ReactElement {
   const { data, error, loading, fetchedAt, refresh } = useEndpointData(fetchInfo);
-  const constituentStatuses = data ? getConstituentStatuses(data) : [];
 
   return (
     <section>
@@ -91,51 +118,7 @@ export function OverviewPage(): ReactElement {
       {loading ? <LoadingState /> : null}
       {error ? <ErrorState message={error} onRetry={() => void refresh()} /> : null}
       {!loading && !error && !data ? <EmptyState message="No data found." /> : null}
-
-      {!loading && !error && data ? (
-        <>
-          <p>
-            Beacon ID:{" "}
-            {typeof data.meta?.beaconId === "string" ? data.meta.beaconId : "Unknown"}
-          </p>
-          <p>
-            API version:{" "}
-            {typeof data.meta?.apiVersion === "string"
-              ? data.meta.apiVersion
-              : "Unknown"}
-          </p>
-          <h3>Constituent endpoints</h3>
-          {constituentStatuses.length === 0 ? (
-            <p>Unknown</p>
-          ) : (
-            <table>
-              <thead>
-                <tr>
-                  <th>Beacon</th>
-                  <th>Endpoint</th>
-                  <th>Status</th>
-                  <th>Detail</th>
-                </tr>
-              </thead>
-              <tbody>
-                {constituentStatuses.map((item) => (
-                  <tr key={item.key}>
-                    <td>{item.beacon}</td>
-                    <td>{item.endpoint}</td>
-                    <td>
-                      <span className={`status-badge ${item.status}`}>
-                        {item.status}
-                      </span>
-                    </td>
-                    <td>{item.detail}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-          <JsonPanel title="/info response" value={data} />
-        </>
-      ) : null}
+      {!loading && !error && data ? <OverviewContent data={data} /> : null}
     </section>
   );
 }
