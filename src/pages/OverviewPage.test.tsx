@@ -15,6 +15,20 @@ const infoPayload = {
   },
   response: {
     info: {
+      beaconNodes: [
+        {
+          id: "beacon-one",
+          rootUrl: "https://example.org/api"
+        },
+        {
+          id: "beacon-two",
+          rootUrl: "https://example.net/api"
+        },
+        {
+          id: "beacon-three",
+          rootUrl: "https://unavailable.example/api"
+        }
+      ],
       metadata_errors: [
         {
           endpoint: "https://example.org/reported-source",
@@ -50,26 +64,67 @@ const infoPayload = {
 };
 
 describe("OverviewContent", () => {
-  it("summarizes constituent names and published welcome URLs only", () => {
+  it("joins configured nodes to constituent responses and reports availability", () => {
     expect(getConstituentBeaconSummaries(infoPayload)).toEqual([
       {
-        key: "Beacon One:0",
-        beacon: "Beacon One",
-        welcomeUrl: "https://example.org/welcome"
+        key: "beacon-one:0",
+        name: "Beacon One",
+        id: "beacon-one",
+        rootUrl: "https://example.org/api",
+        status: "available"
       },
       {
         key: "beacon-two:1",
-        beacon: "beacon-two",
-        welcomeUrl: null
+        name: null,
+        id: "beacon-two",
+        rootUrl: "https://example.net/api",
+        status: "available"
+      },
+      {
+        key: "beacon-three:2",
+        name: null,
+        id: "beacon-three",
+        rootUrl: "https://unavailable.example/api",
+        status: "unavailable"
       }
     ]);
 
     const html = renderToStaticMarkup(<OverviewContent data={infoPayload} />);
     expect(html).toContain("Constituent beacons");
-    expect(html).toContain("Welcome URL");
-    expect(html).toContain("https://example.org/welcome");
-    expect(html).not.toContain("https://example.org/api");
-    expect(html).not.toContain("https://example.net/api");
+    expect(html).toContain("Beacon name");
+    expect(html).toContain("Beacon ID");
+    expect(html).toContain("Beacon root URL");
+    expect(html).toContain("Beacon health status");
+    expect(html).toContain("https://example.org/api");
+    expect(html).toContain("https://unavailable.example/api");
+    expect(html).toContain("Available");
+    expect(html).toContain("Unavailable");
+    expect(html).not.toContain("https://example.org/welcome");
+  });
+
+  it("omits malformed configured nodes", () => {
+    expect(
+      getConstituentBeaconSummaries({
+        response: {
+          info: {
+            beaconNodes: [
+              { id: "valid", rootUrl: "https://valid.example/api" },
+              { id: "missing-url" },
+              { id: "invalid-url", rootUrl: "not a URL" },
+              null
+            ]
+          }
+        }
+      })
+    ).toEqual([
+      {
+        key: "valid:0",
+        name: null,
+        id: "valid",
+        rootUrl: "https://valid.example/api",
+        status: "unavailable"
+      }
+    ]);
   });
 
   it("renders every propagated metadata error in a collapsed table", () => {

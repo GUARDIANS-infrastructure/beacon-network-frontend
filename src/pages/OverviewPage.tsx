@@ -20,29 +20,35 @@ function ConstituentBeaconTable({
   summaries: ConstituentBeaconSummary[];
 }): ReactElement {
   if (summaries.length === 0) {
-    return <p>None reported.</p>;
+    return <p>No configured Beacon nodes reported.</p>;
   }
 
   return (
-    <table>
+    <table className="constituent-beacon-table">
       <thead>
         <tr>
-          <th>Beacon</th>
-          <th>Welcome URL</th>
+          <th>Beacon name</th>
+          <th>Beacon ID</th>
+          <th>Beacon root URL</th>
+          <th>Beacon health status</th>
         </tr>
       </thead>
       <tbody>
         {summaries.map((summary) => (
           <tr key={summary.key}>
-            <td>{summary.beacon}</td>
+            <td>{summary.name ?? "Unknown"}</td>
+            <td>{summary.id}</td>
             <td>
-              {summary.welcomeUrl ? (
-                <a href={summary.welcomeUrl} rel="noreferrer" target="_blank">
-                  {summary.welcomeUrl}
-                </a>
-              ) : (
-                "Unknown"
-              )}
+              <a href={summary.rootUrl} rel="noreferrer" target="_blank">
+                {summary.rootUrl}
+              </a>
+            </td>
+            <td>
+              <span
+                className={`status-badge ${summary.status === "available" ? "ok" : "error"}`}
+              >
+                {summary.status === "available" ? "Available" : "Unavailable"}
+              </span>
             </td>
           </tr>
         ))}
@@ -98,8 +104,8 @@ export function OverviewContent({ data }: { data: BeaconEnvelope }): ReactElemen
       </p>
       <h3>Constituent beacons</h3>
       <p className="table-note">
-        Welcome URLs are info published by the constituent responses; they are not
-        necessarily constituent API root URLs.
+        Configured nodes are always listed. Available means the node returned a
+        constituent response in this /info result.
       </p>
       <ConstituentBeaconTable summaries={summaries} />
       <MetadataErrorsTable rows={metadataErrorRows} />

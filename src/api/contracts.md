@@ -86,7 +86,8 @@ UI may show `meta.apiVersion` and `meta.beaconId` as small labels.
 ### Purpose in UI
 Used on the **Overview** page to show:
 - aggregator identity and metadata (from `response`)
-- optionally, a list of constituent beacon summaries when returned by the aggregator (from top-level `responses[]`)
+- the complete configured node inventory (from `response.info.beaconNodes`)
+- node names and availability derived from top-level `responses[]`
 - any aggregator-reported metadata errors (from `response.info.metadata_errors`)
 
 ### Observed shapes
@@ -117,6 +118,9 @@ Top-level:
 - `responses` (array, optional) — per-beacon `/info` responses
 
 Aggregator `response` has the same “display subset” as constituent responses, plus:
+- `response.info.beaconNodes` (array)
+  - `id` (string)
+  - `rootUrl` (HTTP(S) URL)
 - `response.info.metadata_errors` (array, optional)
   - each item:
     - `endpoint` (string URL, optional)
@@ -135,12 +139,15 @@ Per-beacon `responses[]` items:
   - `response.description`,
   - `response.environment`,
   - `meta.apiVersion`.
-- If `responses[]` is present, show one “Constituent beacons” table with:
-  - beacon name (fallback: id/meta beacon ID), and
-  - `welcomeUrl` only.
-- Label `welcomeUrl` as a welcome URL, never as a constituent API root. Do not
-  infer or display a root URL from `alternativeUrl`, error messages, or other
-  response content.
+- Use `response.info.beaconNodes` as the authoritative table rows, displaying
+  each configured node's ID and root URL.
+- Join each configured node to `responses[]` by `response.id` or
+  `meta.beaconId`.
+- Show the response name when a match exists; otherwise show “Unknown”.
+- A matching response means “Available” for this `/info` request. A configured
+  node without a matching response remains visible and is “Unavailable”.
+- Never infer a root URL from `welcomeUrl`, `alternativeUrl`, metadata errors,
+  or other response content.
 - Render `metadata_errors` as a collapsed “Metadata errors” table. Show each
   reported error’s endpoint, path, and message; the reported endpoint is not
   necessarily a constituent API root.

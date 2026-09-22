@@ -116,6 +116,11 @@ td {
   margin-top: -0.5rem;
 }
 
+.constituent-beacon-table td {
+  overflow-wrap: anywhere;
+  vertical-align: top;
+}
+
 .metadata-errors {
   margin-top: 1rem;
 }
