@@ -2,8 +2,10 @@ import type { BeaconEnvelope } from "../api/types";
 
 export type ConstituentBeaconSummary = {
   key: string;
-  beacon: string;
-  welcomeUrl: string | null;
+  name: string | null;
+  id: string;
+  rootUrl: string;
+  status: "available" | "unavailable";
 };
 
 export type MetadataErrorRow = {
@@ -31,24 +33,41 @@ const isHttpUrl = (value: string): boolean => {
 export const getConstituentBeaconSummaries = (
   data: BeaconEnvelope
 ): ConstituentBeaconSummary[] => {
-  if (!Array.isArray(data.responses)) {
+  const info = data.response?.info;
+  if (!isRecord(info) || !Array.isArray(info.beaconNodes)) {
     return [];
   }
 
-  return data.responses.filter(isRecord).map((item, index) => {
+  const responsesById = new Map<string, Record<string, unknown>>();
+  (Array.isArray(data.responses) ? data.responses : []).filter(isRecord).forEach((item) => {
     const response = isRecord(item.response) ? item.response : undefined;
     const meta = isRecord(item.meta) ? item.meta : undefined;
-    const beacon =
-      asString(response?.name) ??
-      asString(response?.id) ??
-      asString(meta?.beaconId) ??
-      `Constituent ${index + 1}`;
-    const welcomeUrl = asString(response?.welcomeUrl);
+    const ids = [asString(response?.id), asString(meta?.beaconId)].filter(
+      (id): id is string => id !== undefined
+    );
+
+    ids.forEach((id) => responsesById.set(id, response ?? {}));
+  });
+
+  return info.beaconNodes.flatMap((node, index) => {
+    if (!isRecord(node)) {
+      return [];
+    }
+
+    const id = asString(node.id);
+    const rootUrl = asString(node.rootUrl);
+    if (!id || !rootUrl || !isHttpUrl(rootUrl)) {
+      return [];
+    }
+
+    const response = responsesById.get(id);
 
     return {
-      key: `${beacon}:${index}`,
-      beacon,
-      welcomeUrl: welcomeUrl && isHttpUrl(welcomeUrl) ? welcomeUrl : null
+      key: `${id}:${index}`,
+      name: response ? (asString(response.name) ?? null) : null,
+      id,
+      rootUrl,
+      status: response ? "available" : "unavailable"
     };
   });
 };
